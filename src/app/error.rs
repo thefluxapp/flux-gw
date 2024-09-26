@@ -1,28 +1,27 @@
-use anyhow::Error;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
+    Json,
 };
-
-pub struct AppError(Error);
-
-impl<E> From<E> for AppError
-where
-    E: Into<Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
-}
+use serde_json::json;
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        dbg!(&self.0);
+        let payload = json!({
+            "code": "XXX", "message": self.0.to_string()
+        });
 
-        let status = match self {
-            _ => StatusCode::BAD_REQUEST,
-        };
+        (StatusCode::BAD_REQUEST, Json(payload)).into_response()
+    }
+}
 
-        (status, self.0.to_string()).into_response()
+pub struct AppError(anyhow::Error);
+
+impl<E> From<E> for AppError
+where
+    E: Into<anyhow::Error>,
+{
+    fn from(err: E) -> Self {
+        Self(err.into())
     }
 }

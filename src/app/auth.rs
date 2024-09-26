@@ -1,15 +1,21 @@
-use axum::{extract::State, routing::post, Json, Router};
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{error::AppError, state::AppState};
+use super::{error::AppError, state::AppState, user::AppUser};
+
+pub mod settings;
 
 pub fn router() -> Router<AppState> {
     Router::new()
         // .route("/login", post(controller::login))
         .route("/join", post(join))
         .route("/complete", post(complete))
-    // .route("/me", get(controller::me))
+        .route("/me", get(me))
 }
 
 async fn join(
@@ -72,4 +78,44 @@ impl Into<CompleteResponse> for flux_auth_api::CompleteResponse {
 #[derive(Serialize)]
 struct CompleteResponse {
     pub jwt: String,
+}
+
+async fn me(
+    State(AppState {
+        auth_service_client,
+        ..
+    }): State<AppState>,
+    user: AppUser,
+) -> Result<Json<MeResponse>, AppError> {
+    let request = flux_auth_api::MeRequest {
+        user_id: Some(user.id.into()),
+    };
+
+    let response = auth_service_client.clone().me(request).await?.into_inner();
+
+    Ok(Json(response.into()))
+}
+
+#[derive(Serialize)]
+struct MeResponse {
+    pub user: MeUserResponse,
+}
+
+#[derive(Serialize)]
+struct MeUserResponse {
+    pub id: String,
+    pub fist_name: String,
+    pub last_name: String,
+}
+
+impl Into<MeResponse> for flux_auth_api::MeResponse {
+    fn into(self) -> MeResponse {
+        MeResponse {
+            user: MeUserResponse {
+                id: self.id().into(),
+                fist_name: self.first_name().into(),
+                last_name: self.last_name().into(),
+            },
+        }
+    }
 }
