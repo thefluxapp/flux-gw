@@ -54,5 +54,5 @@ pub struct AppUser {
 #[derive(Deserialize)]
 pub struct Claims {
     pub sub: Uuid,
-    pub exp: usize,
+    // pub exp: usize,
 }

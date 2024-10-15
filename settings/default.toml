@@ -3,5 +3,11 @@ _name = "flux-gw"
 [http]
 endpoint = "0.0.0.0:3000"
 
+[auth]
+public_key_file = ""
+
 [clients.flux_auth]
-endpoint = "http://0.0.0.0:3011"
+endpoint = ""
+
+[clients.flux_core]
+endpoint = ""

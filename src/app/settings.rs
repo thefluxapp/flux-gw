@@ -20,11 +20,12 @@ pub struct HttpSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct ClientsSettings {
-    pub flux_auth: ClientsAuthSettings,
+    pub flux_auth: ClientSettings,
+    pub flux_core: ClientSettings,
 }
 
 #[derive(Deserialize, Clone)]
-pub struct ClientsAuthSettings {
+pub struct ClientSettings {
     pub endpoint: String,
 }
 

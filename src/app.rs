@@ -2,12 +2,12 @@ use anyhow::Error;
 use axum::{routing::get, Router};
 use settings::AppSettings;
 use state::AppState;
-// use tonic::service::Routes;
 
 mod auth;
 mod error;
 mod settings;
 mod state;
+mod streams;
 mod user;
 
 pub async fn run() -> Result<(), Error> {
@@ -25,7 +25,8 @@ async fn http(state: &AppState) -> Result<(), Error> {
             "/api",
             Router::new()
                 .route("/healthz", get(|| async {}))
-                .nest("/auth", auth::router()),
+                .nest("/auth", auth::router())
+                .nest("/streams", streams::router()),
         )
         .with_state(state.to_owned());
 

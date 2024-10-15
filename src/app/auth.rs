@@ -85,20 +85,30 @@ async fn me(
         auth_service_client,
         ..
     }): State<AppState>,
-    user: AppUser,
+    user: Option<AppUser>,
 ) -> Result<Json<MeResponse>, AppError> {
-    let request = flux_auth_api::MeRequest {
-        user_id: Some(user.id.into()),
+    let response = match user {
+        Some(user) => {
+            let request = flux_auth_api::MeRequest {
+                user_id: Some(user.id.into()),
+            };
+
+            auth_service_client
+                .clone()
+                .me(request)
+                .await?
+                .into_inner()
+                .into()
+        }
+        None => MeResponse { user: None },
     };
 
-    let response = auth_service_client.clone().me(request).await?.into_inner();
-
-    Ok(Json(response.into()))
+    Ok(Json(response))
 }
 
 #[derive(Serialize)]
 struct MeResponse {
-    pub user: MeUserResponse,
+    pub user: Option<MeUserResponse>,
 }
 
 #[derive(Serialize)]
@@ -111,11 +121,11 @@ struct MeUserResponse {
 impl Into<MeResponse> for flux_auth_api::MeResponse {
     fn into(self) -> MeResponse {
         MeResponse {
-            user: MeUserResponse {
+            user: Some(MeUserResponse {
                 id: self.id().into(),
                 fist_name: self.first_name().into(),
                 last_name: self.last_name().into(),
-            },
+            }),
         }
     }
 }
