@@ -86,7 +86,7 @@ async fn me(
         ..
     }): State<AppState>,
     user: Option<AppUser>,
-) -> Result<Json<MeResponse>, AppError> {
+) -> Result<Json<me::Response>, AppError> {
     let response = match user {
         Some(user) => {
             let request = flux_auth_api::MeRequest {
@@ -100,32 +100,38 @@ async fn me(
                 .into_inner()
                 .into()
         }
-        None => MeResponse { user: None },
+        None => me::Response { user: None },
     };
 
     Ok(Json(response))
 }
 
-#[derive(Serialize)]
-struct MeResponse {
-    pub user: Option<MeUserResponse>,
-}
+mod me {
+    use serde::Serialize;
 
-#[derive(Serialize)]
-struct MeUserResponse {
-    pub id: String,
-    pub fist_name: String,
-    pub last_name: String,
-}
+    #[derive(Serialize)]
+    pub struct Response {
+        pub user: Option<User>,
+    }
 
-impl Into<MeResponse> for flux_auth_api::MeResponse {
-    fn into(self) -> MeResponse {
-        MeResponse {
-            user: Some(MeUserResponse {
-                id: self.id().into(),
-                fist_name: self.first_name().into(),
-                last_name: self.last_name().into(),
-            }),
+    #[derive(Serialize)]
+    pub struct User {
+        pub user_id: String,
+        pub fist_name: String,
+        pub last_name: String,
+        pub name: String,
+    }
+
+    impl Into<Response> for flux_auth_api::MeResponse {
+        fn into(self) -> Response {
+            Response {
+                user: Some(User {
+                    user_id: self.user_id().into(),
+                    fist_name: self.first_name().into(),
+                    last_name: self.last_name().into(),
+                    name: self.name().into(),
+                }),
+            }
         }
     }
 }

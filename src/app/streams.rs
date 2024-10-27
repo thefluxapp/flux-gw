@@ -33,7 +33,7 @@ mod get_streams {
 
     #[derive(Serialize)]
     pub struct Stream {
-        pub id: String,
+        pub stream_id: String,
         pub message_id: String,
         pub text: Option<String>,
     }
@@ -45,7 +45,7 @@ mod get_streams {
                     .streams
                     .iter()
                     .map(|m| Stream {
-                        id: m.id().into(),
+                        stream_id: m.stream_id().into(),
                         message_id: m.message_id().into(),
                         text: m.text.clone(),
                     })

@@ -5,6 +5,7 @@ use state::AppState;
 
 mod auth;
 mod error;
+mod messages;
 mod settings;
 mod state;
 mod streams;
@@ -26,7 +27,8 @@ async fn http(state: &AppState) -> Result<(), Error> {
             Router::new()
                 .route("/healthz", get(|| async {}))
                 .nest("/auth", auth::router())
-                .nest("/streams", streams::router()),
+                .nest("/streams", streams::router())
+                .nest("/messages", messages::router()),
         )
         .with_state(state.to_owned());
 
