@@ -1,27 +1,29 @@
 use axum::{
     extract::{Path, State},
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
+use create_message::Request;
 use flux_auth_api::GetUsersRequest;
-use flux_core_api::GetMessageRequest;
-use get_messages::Response;
+use flux_core_api::{CreateMessageRequest, GetMessageRequest};
 use uuid::Uuid;
 
-use super::{error::AppError, state::AppState};
+use super::{error::AppError, state::AppState, user::AppUser};
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/:message_id", get(get_messages))
+    Router::new()
+        .route("/:message_id", get(get_message))
+        .route("/", post(create_message))
 }
 
-async fn get_messages(
+async fn get_message(
     Path(message_id): Path<Uuid>,
     State(AppState {
         messages_service_client,
         users_service_client,
         ..
     }): State<AppState>,
-) -> Result<Json<Response>, AppError> {
+) -> Result<Json<get_message::Response>, AppError> {
     // TODO: make requests not seq
 
     let get_message_response = messages_service_client
@@ -55,7 +57,7 @@ async fn get_messages(
     Ok(Json((get_message_response, get_users_response).try_into()?))
 }
 
-mod get_messages {
+mod get_message {
     use std::collections::HashMap;
 
     use anyhow::{anyhow, Error};
@@ -162,6 +164,62 @@ mod get_messages {
             Self {
                 user_id: user.user_id().into(),
                 name: user.name().into(),
+            }
+        }
+    }
+}
+
+async fn create_message(
+    State(AppState {
+        messages_service_client,
+        ..
+    }): State<AppState>,
+    user: AppUser,
+    Json(data): Json<Request>,
+) -> Result<Json<create_message::Response>, AppError> {
+    let res = messages_service_client
+        .clone()
+        .create_message(CreateMessageRequest {
+            text: Some(data.text),
+            message_id: match data.message_id {
+                Some(message_id) => Some(message_id.into()),
+                None => None,
+            },
+            user_id: Some(user.id.into()),
+        })
+        .await?
+        .into_inner();
+
+    Ok(Json(res.into()))
+}
+
+mod create_message {
+    use flux_core_api::CreateMessageResponse;
+    use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
+
+    #[derive(Deserialize, Debug)]
+    pub struct Request {
+        pub text: String,
+        pub message_id: Option<Uuid>,
+    }
+
+    #[derive(Serialize)]
+    pub struct Response {
+        pub message: Message,
+    }
+
+    #[derive(Serialize)]
+    pub struct Message {
+        pub message_id: String,
+    }
+
+    impl From<CreateMessageResponse> for Response {
+        fn from(res: CreateMessageResponse) -> Self {
+            Self {
+                message: Message {
+                    message_id: res.message_id().into(),
+                },
             }
         }
     }
