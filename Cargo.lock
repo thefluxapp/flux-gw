@@ -328,7 +328,7 @@ dependencies = [
 [[package]]
 name = "flux-core-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-core.git#82ebac407879a29c7e91243b90695f48c30c2a32"
+source = "git+https://github.com/thefluxapp/flux-core.git#2f65269d8a2e118c6d8e2a4a6ecf9d8dc3a82e7d"
 dependencies = [
  "prost",
  "tonic",
