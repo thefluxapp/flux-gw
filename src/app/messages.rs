@@ -5,7 +5,7 @@ use axum::{
 };
 use create_message::Request;
 use flux_auth_api::GetUsersRequest;
-use flux_core_api::{CreateMessageRequest, GetMessageRequest};
+use flux_core_api::{CreateMessageRequest, GetMessageRequest, GetStreamsRequest};
 use uuid::Uuid;
 
 use super::{error::AppError, state::AppState, user::AppUser};
@@ -21,9 +21,10 @@ async fn get_message(
     State(AppState {
         messages_service_client,
         users_service_client,
+        streams_service_client,
         ..
     }): State<AppState>,
-) -> Result<Json<get_message::Response>, AppError> {
+) -> Result<Json<get_message::Res>, AppError> {
     // TODO: make requests not seq
 
     let get_message_response = messages_service_client
@@ -34,27 +35,50 @@ async fn get_message(
         .await?
         .into_inner();
 
-    // let get_messages_response = messages_service_client
-    //     .clone()
-    //     .get_messages(GetMessagesRequest {
-    //         message_ids: get_message_response.message_ids.clone(),
-    //     })
-    //     .await?
-    //     .into_inner();
+    let mut get_streams_request = GetStreamsRequest::default();
 
-    let get_users_response = users_service_client
+    for message in &get_message_response.messages {
+        if let Some(stream_id) = message.stream_id.clone() {
+            get_streams_request.stream_ids.push(stream_id);
+        }
+    }
+
+    if let Some(message) = get_message_response.message.clone() {
+        if let Some(stream_id) = message.stream_id {
+            get_streams_request.stream_ids.push(stream_id);
+        }
+    }
+
+    let get_streams_response = streams_service_client
         .clone()
-        .get_users(GetUsersRequest {
-            user_ids: get_message_response
-                .messages
-                .iter()
-                .map(|m| m.user_id().into())
-                .collect(),
-        })
+        .get_streams(get_streams_request)
         .await?
         .into_inner();
 
-    Ok(Json((get_message_response, get_users_response).try_into()?))
+    let mut get_users_request = GetUsersRequest::default();
+
+    for message in &get_message_response.messages {
+        get_users_request.user_ids.push(message.user_id().into());
+    }
+
+    for stream in &get_streams_response.streams {
+        get_users_request.user_ids.extend(stream.user_ids.clone());
+    }
+
+    let get_users_response = users_service_client
+        .clone()
+        .get_users(get_users_request)
+        .await?
+        .into_inner();
+
+    Ok(Json(
+        (
+            get_message_response,
+            get_users_response,
+            get_streams_response,
+        )
+            .try_into()?,
+    ))
 }
 
 mod get_message {
@@ -62,11 +86,13 @@ mod get_message {
 
     use anyhow::{anyhow, Error};
     use flux_auth_api::{get_users_response, GetUsersResponse};
-    use flux_core_api::{get_message_response, GetMessageResponse};
+    use flux_core_api::{
+        get_message_response, get_streams_response, GetMessageResponse, GetStreamsResponse,
+    };
     use serde::Serialize;
 
     #[derive(Serialize)]
-    pub struct Response {
+    pub struct Res {
         pub message: Message,
         pub messages: Vec<Message>,
     }
@@ -75,6 +101,7 @@ mod get_message {
     pub struct Stream {
         pub stream_id: String,
         pub text: Option<String>,
+        pub users: Vec<User>,
     }
 
     #[derive(Serialize)]
@@ -93,11 +120,15 @@ mod get_message {
 
     type Users = HashMap<String, get_users_response::User>;
 
-    impl TryFrom<(GetMessageResponse, GetUsersResponse)> for Response {
+    impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Res {
         type Error = Error;
 
         fn try_from(
-            (get_message_response, get_users_response): (GetMessageResponse, GetUsersResponse),
+            (get_message_response, get_users_response, get_streams_response): (
+                GetMessageResponse,
+                GetUsersResponse,
+                GetStreamsResponse,
+            ),
         ) -> Result<Self, Self::Error> {
             let users: Users = get_users_response
                 .users
@@ -105,18 +136,34 @@ mod get_message {
                 .map(|v| (v.user_id().into(), v))
                 .collect();
 
+            let streams: HashMap<String, get_streams_response::Stream> = get_streams_response
+                .streams
+                .into_iter()
+                .map(|v| (v.stream_id().into(), v))
+                .collect();
+
             let message = get_message_response
                 .message
                 .ok_or(anyhow!("message not found"))?;
 
             Ok(Self {
-                message: (message.clone(), users.get(message.user_id())).try_into()?,
+                message: (
+                    message.clone(),
+                    users.get(message.user_id()),
+                    streams.get(message.stream_id()),
+                )
+                    .try_into()?,
 
                 messages: get_message_response
                     .messages
                     .into_iter()
                     .map(|m| -> Result<Message, Self::Error> {
-                        (m.clone(), users.get(m.user_id())).try_into()
+                        (
+                            m.clone(),
+                            users.get(m.user_id()),
+                            streams.get(m.stream_id()),
+                        )
+                            .try_into()
                     })
                     .collect::<Result<Vec<Message>, Self::Error>>()?,
             })
@@ -127,34 +174,38 @@ mod get_message {
         TryFrom<(
             get_message_response::Message,
             Option<&get_users_response::User>,
+            Option<&get_streams_response::Stream>,
         )> for Message
     {
         type Error = Error;
 
         fn try_from(
-            (message, user): (
+            (message, user, stream): (
                 get_message_response::Message,
                 Option<&get_users_response::User>,
+                Option<&get_streams_response::Stream>,
             ),
         ) -> Result<Self, Self::Error> {
             let user = user.ok_or(anyhow!("user not found"))?.to_owned();
+
             Ok(Self {
                 message_id: message.message_id().into(),
                 text: message.text().into(),
                 user: user.into(),
-                stream: match message.stream {
-                    Some(stream) => Some(stream.into()),
+                stream: match stream {
+                    Some(stream) => Some(stream.to_owned().into()),
                     None => None,
                 },
             })
         }
     }
 
-    impl From<get_message_response::Stream> for Stream {
-        fn from(stream: get_message_response::Stream) -> Self {
+    impl From<get_streams_response::Stream> for Stream {
+        fn from(stream: get_streams_response::Stream) -> Self {
             Self {
                 stream_id: stream.stream_id().into(),
                 text: stream.text,
+                users: vec![],
             }
         }
     }
