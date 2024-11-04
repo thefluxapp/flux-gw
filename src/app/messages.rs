@@ -119,6 +119,7 @@ mod get_message {
     }
 
     type Users = HashMap<String, get_users_response::User>;
+    type Streams = HashMap<String, get_streams_response::Stream>;
 
     impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Res {
         type Error = Error;
@@ -136,7 +137,7 @@ mod get_message {
                 .map(|v| (v.user_id().into(), v))
                 .collect();
 
-            let streams: HashMap<String, get_streams_response::Stream> = get_streams_response
+            let streams: Streams = get_streams_response
                 .streams
                 .into_iter()
                 .map(|v| (v.stream_id().into(), v))
@@ -147,23 +148,13 @@ mod get_message {
                 .ok_or(anyhow!("message not found"))?;
 
             Ok(Self {
-                message: (
-                    message.clone(),
-                    users.get(message.user_id()),
-                    streams.get(message.stream_id()),
-                )
-                    .try_into()?,
+                message: (message.clone(), &users, streams.get(message.stream_id())).try_into()?,
 
                 messages: get_message_response
                     .messages
                     .into_iter()
                     .map(|m| -> Result<Message, Self::Error> {
-                        (
-                            m.clone(),
-                            users.get(m.user_id()),
-                            streams.get(m.stream_id()),
-                        )
-                            .try_into()
+                        (m.clone(), &users, streams.get(m.stream_id())).try_into()
                     })
                     .collect::<Result<Vec<Message>, Self::Error>>()?,
             })
@@ -173,40 +164,61 @@ mod get_message {
     impl
         TryFrom<(
             get_message_response::Message,
-            Option<&get_users_response::User>,
+            &Users,
             Option<&get_streams_response::Stream>,
         )> for Message
     {
         type Error = Error;
 
         fn try_from(
-            (message, user, stream): (
+            (message, users, stream): (
                 get_message_response::Message,
-                Option<&get_users_response::User>,
+                &Users,
                 Option<&get_streams_response::Stream>,
             ),
         ) -> Result<Self, Self::Error> {
-            let user = user.ok_or(anyhow!("user not found"))?.to_owned();
+            let user = users
+                .get(&message.user_id().to_string())
+                .ok_or(anyhow!("user not found"))?
+                .to_owned();
 
             Ok(Self {
                 message_id: message.message_id().into(),
                 text: message.text().into(),
                 user: user.into(),
                 stream: match stream {
-                    Some(stream) => Some(stream.to_owned().into()),
+                    Some(stream) => Some((stream.to_owned(), users).try_into()?),
                     None => None,
                 },
             })
         }
     }
 
-    impl From<get_streams_response::Stream> for Stream {
-        fn from(stream: get_streams_response::Stream) -> Self {
-            Self {
+    impl TryFrom<(get_streams_response::Stream, &Users)> for Stream {
+        type Error = Error;
+
+        fn try_from(
+            (stream, users): (get_streams_response::Stream, &Users),
+        ) -> Result<Self, Self::Error> {
+            Ok(Self {
                 stream_id: stream.stream_id().into(),
                 text: stream.text,
-                users: vec![],
-            }
+                users: stream
+                    .user_ids
+                    .iter()
+                    .map(|user_id| -> Result<User, Error> {
+                        let user = users
+                            .get(&user_id.to_string())
+                            .ok_or(anyhow!("user not found"))?
+                            .to_owned();
+
+                        Ok(User {
+                            user_id: user.user_id().into(),
+                            name: user.name().into(),
+                        })
+                    })
+                    .collect::<Result<Vec<User>, Self::Error>>()?,
+            })
         }
     }
 
