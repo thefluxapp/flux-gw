@@ -116,6 +116,8 @@ mod get_message {
     pub struct User {
         pub user_id: String,
         pub name: String,
+        pub first_name: String,
+        pub last_name: String,
     }
 
     type Users = HashMap<String, get_users_response::User>;
@@ -215,6 +217,8 @@ mod get_message {
                         Ok(User {
                             user_id: user.user_id().into(),
                             name: user.name().into(),
+                            first_name: user.first_name().into(),
+                            last_name: user.last_name().into(),
                         })
                     })
                     .collect::<Result<Vec<User>, Self::Error>>()?,
@@ -227,6 +231,8 @@ mod get_message {
             Self {
                 user_id: user.user_id().into(),
                 name: user.name().into(),
+                first_name: user.first_name().into(),
+                last_name: user.last_name().into(),
             }
         }
     }
