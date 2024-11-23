@@ -118,6 +118,8 @@ mod get_message {
         pub name: String,
         pub first_name: String,
         pub last_name: String,
+        pub abbr: String,
+        pub color: String,
     }
 
     type Users = HashMap<String, get_users_response::User>;
@@ -219,6 +221,8 @@ mod get_message {
                             name: user.name().into(),
                             first_name: user.first_name().into(),
                             last_name: user.last_name().into(),
+                            abbr: user.abbr().into(),
+                            color: user.color().into(),
                         })
                     })
                     .collect::<Result<Vec<User>, Self::Error>>()?,
@@ -233,6 +237,8 @@ mod get_message {
                 name: user.name().into(),
                 first_name: user.first_name().into(),
                 last_name: user.last_name().into(),
+                abbr: user.abbr().into(),
+                color: user.color().into(),
             }
         }
     }

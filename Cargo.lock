@@ -318,7 +318,7 @@ checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 [[package]]
 name = "flux-auth-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-auth.git#2366ee1047d8b906f33f45573eeecb6970076c1e"
+source = "git+https://github.com/thefluxapp/flux-auth.git?branch=dev#500437eef3922c9bb99c387918a6d0c26cfaa407"
 dependencies = [
  "prost",
  "tonic",

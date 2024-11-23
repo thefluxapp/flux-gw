@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-flux-auth-api = { git = "https://github.com/thefluxapp/flux-auth.git" }
+flux-auth-api = { git = "https://github.com/thefluxapp/flux-auth.git", branch = "dev" }
 flux-core-api = { git = "https://github.com/thefluxapp/flux-core.git" }
 
 anyhow = "1.0.91"
