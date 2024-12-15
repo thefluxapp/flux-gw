@@ -3,7 +3,7 @@ use std::env;
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 
-use super::auth::settings::AuthSettings;
+use super::{auth::settings::AuthSettings, notify::settings::NotifySettings};
 
 #[derive(Deserialize, Clone)]
 pub struct AppSettings {
@@ -11,6 +11,8 @@ pub struct AppSettings {
     pub http: HttpSettings,
     pub auth: AuthSettings,
     pub clients: ClientsSettings,
+    pub notify: NotifySettings,
+    pub nats: NATSSettings,
 }
 
 #[derive(Deserialize, Clone)]
@@ -27,6 +29,12 @@ pub struct ClientsSettings {
 #[derive(Deserialize, Clone)]
 pub struct ClientSettings {
     pub endpoint: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct NATSSettings {
+    pub endpoint: String,
+    pub stream: String,
 }
 
 impl AppSettings {
