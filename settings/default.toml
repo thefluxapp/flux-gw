@@ -6,8 +6,19 @@ endpoint = "0.0.0.0:3000"
 [auth]
 public_key_file = ""
 
+[nats]
+endpoint = "0.0.0.0:4222"
+stream = "flux"
+
 [clients.flux_auth]
 endpoint = ""
 
 [clients.flux_core]
 endpoint = ""
+
+[notify]
+capacity = 256
+
+[notify.messaging.message]
+subjects = ["flux.messages.message"]
+consumer = "flux-gw-notify-message"

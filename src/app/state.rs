@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use anyhow::Error;
+use async_nats::jetstream;
 use flux_auth_api::{
     auth_service_client::AuthServiceClient, users_service_client::UsersServiceClient,
 };
@@ -8,7 +11,7 @@ use flux_core_api::{
 use tokio::fs;
 use tonic::transport::Channel;
 
-use super::settings::AppSettings;
+use super::{notify::state::NotifyState, settings::AppSettings, AppJS};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,10 +21,17 @@ pub struct AppState {
     pub streams_service_client: StreamsServiceClient<Channel>,
     pub messages_service_client: MessagesServiceClient<Channel>,
     pub public_key: Vec<u8>,
+    pub notify: NotifyState,
+    pub js: Arc<AppJS>,
 }
 
 impl AppState {
     pub async fn new(settings: AppSettings) -> Result<Self, Error> {
+        let notify = NotifyState::new(settings.notify.clone());
+
+        let nats = async_nats::connect(&settings.nats.endpoint).await.unwrap();
+        let js = Arc::new(jetstream::new(nats));
+
         let auth_service_client =
             Self::auth_service_client(settings.clients.flux_auth.endpoint.clone()).await?;
 
@@ -45,6 +55,8 @@ impl AppState {
             streams_service_client,
             messages_service_client,
             public_key,
+            notify,
+            js,
         })
     }
 

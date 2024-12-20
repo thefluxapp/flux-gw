@@ -93,31 +93,35 @@ mod get_message {
 
     #[derive(Serialize)]
     pub struct Res {
-        pub message: Message,
-        pub messages: Vec<Message>,
+        message: Message,
+        messages: Vec<Message>,
     }
 
     #[derive(Serialize)]
-    pub struct Stream {
-        pub stream_id: String,
-        pub text: Option<String>,
-        pub users: Vec<User>,
+    struct Stream {
+        stream_id: String,
+        text: Option<String>,
+        users: Vec<User>,
     }
 
     #[derive(Serialize)]
-    pub struct Message {
-        pub message_id: String,
-        pub stream: Option<Stream>,
-        pub text: String,
-        pub user: User,
+    struct Message {
+        message_id: String,
+        stream: Option<Stream>,
+        text: String,
+        code: String,
+        user: User,
+        order: i64,
     }
 
     #[derive(Serialize)]
-    pub struct User {
-        pub user_id: String,
-        pub name: String,
-        pub first_name: String,
-        pub last_name: String,
+    struct User {
+        user_id: String,
+        name: String,
+        first_name: String,
+        last_name: String,
+        abbr: String,
+        color: String,
     }
 
     type Users = HashMap<String, get_users_response::User>;
@@ -187,11 +191,13 @@ mod get_message {
             Ok(Self {
                 message_id: message.message_id().into(),
                 text: message.text().into(),
+                code: message.code().into(),
                 user: user.into(),
                 stream: match stream {
                     Some(stream) => Some((stream.to_owned(), users).try_into()?),
                     None => None,
                 },
+                order: message.order(),
             })
         }
     }
@@ -219,6 +225,8 @@ mod get_message {
                             name: user.name().into(),
                             first_name: user.first_name().into(),
                             last_name: user.last_name().into(),
+                            abbr: user.abbr().into(),
+                            color: user.color().into(),
                         })
                     })
                     .collect::<Result<Vec<User>, Self::Error>>()?,
@@ -233,6 +241,8 @@ mod get_message {
                 name: user.name().into(),
                 first_name: user.first_name().into(),
                 last_name: user.last_name().into(),
+                abbr: user.abbr().into(),
+                color: user.color().into(),
             }
         }
     }
@@ -254,6 +264,7 @@ async fn create_message(
                 Some(message_id) => Some(message_id.into()),
                 None => None,
             },
+            code: Some(data.code),
             user_id: Some(user.id.into()),
         })
         .await?
@@ -270,6 +281,7 @@ mod create_message {
     #[derive(Deserialize, Debug)]
     pub struct Request {
         pub text: String,
+        pub code: String,
         pub message_id: Option<Uuid>,
     }
 

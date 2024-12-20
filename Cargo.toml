@@ -7,18 +7,24 @@ publish = false
 [dependencies]
 flux-auth-api = { git = "https://github.com/thefluxapp/flux-auth.git" }
 flux-core-api = { git = "https://github.com/thefluxapp/flux-core.git" }
+flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
 
-anyhow = "1.0.91"
+anyhow = "1.0.94"
 config = { version = "0.14", default-features = false, features = ["toml"] }
 uuid = { version = "1.11.0", features = ["serde", "v7"] }
 jsonwebtoken = "9.3.0"
+log = "0.4.22"
 
-axum = "0.7.7"
-axum-extra = { version = "0.9.4", features = ["typed-header"] }
+axum = "0.7.9"
+axum-extra = { version = "0.9.6", features = ["typed-header"] }
 
-tokio = { version = "1.41.0", features = ["full"] }
+async-nats = "0.38.0"
 
+tokio = { version = "1.42.0", features = ["full"] }
+tokio-stream = { version = "0.1.17", features = ["sync"] }
+
+prost = "0.13.4"
 tonic = { version = "0.12.3", default-features = false, features = ["channel"] }
 
-serde = { version = "1.0.213", features = ["derive"] }
-serde_json = "1.0.132"
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = "1.0.133"

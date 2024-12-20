@@ -15,6 +15,7 @@ impl IntoResponse for AppError {
     }
 }
 
+#[derive(Debug)]
 pub struct AppError(anyhow::Error);
 
 impl<E> From<E> for AppError
@@ -25,3 +26,17 @@ where
         Self(err.into())
     }
 }
+
+// impl From<async_nats::error::Error<async_nats::jetstream::stream::ConsumerErrorKind>> for AppError {
+//     fn from(_: async_nats::error::Error<async_nats::jetstream::stream::ConsumerErrorKind>) -> Self {
+//         Self::DUMMY
+//     }
+// }
+
+// #[derive(Error, Debug)]
+// pub enum AppError {
+//     #[error("entity not found")]
+//     DUMMY,
+//     #[error(transparent)]
+//     Other(#[from] anyhow::Error),
+// }

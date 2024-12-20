@@ -12,10 +12,47 @@ pub mod settings;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        // .route("/login", post(controller::login))
+        .route("/login", post(login))
         .route("/join", post(join))
         .route("/complete", post(complete))
         .route("/me", get(me))
+}
+
+async fn login(
+    State(AppState {
+        auth_service_client,
+        ..
+    }): State<AppState>,
+    Json(data): Json<Value>,
+) -> Result<Json<login::Response>, AppError> {
+    let request = flux_auth_api::LoginRequest {
+        request: Some(data.to_string()),
+    };
+    let response = auth_service_client
+        .clone()
+        .login(request)
+        .await?
+        .into_inner();
+
+    Ok(Json(response.into()))
+}
+
+mod login {
+    use flux_auth_api::LoginResponse;
+    use serde::Serialize;
+
+    #[derive(Serialize)]
+    pub struct Response {
+        jwt: String,
+    }
+
+    impl From<LoginResponse> for Response {
+        fn from(res: LoginResponse) -> Self {
+            Self {
+                jwt: res.jwt().into(),
+            }
+        }
+    }
 }
 
 async fn join(
@@ -98,7 +135,7 @@ async fn me(
                 .me(request)
                 .await?
                 .into_inner()
-                .into()
+                .try_into()?
         }
         None => me::Response { user: None },
     };
@@ -107,6 +144,7 @@ async fn me(
 }
 
 mod me {
+    use anyhow::{Context, Error};
     use serde::Serialize;
 
     #[derive(Serialize)]
@@ -117,21 +155,29 @@ mod me {
     #[derive(Serialize)]
     pub struct User {
         pub user_id: String,
-        pub fist_name: String,
-        pub last_name: String,
         pub name: String,
+        pub first_name: String,
+        pub last_name: String,
+        pub abbr: String,
+        pub color: String,
     }
 
-    impl Into<Response> for flux_auth_api::MeResponse {
-        fn into(self) -> Response {
-            Response {
+    impl TryFrom<flux_auth_api::MeResponse> for Response {
+        type Error = Error;
+
+        fn try_from(res: flux_auth_api::MeResponse) -> Result<Self, Self::Error> {
+            let user = res.user.context("NO_USER")?;
+
+            Ok(Response {
                 user: Some(User {
-                    user_id: self.user_id().into(),
-                    fist_name: self.first_name().into(),
-                    last_name: self.last_name().into(),
-                    name: self.name().into(),
+                    user_id: user.user_id().into(),
+                    name: user.name().into(),
+                    first_name: user.first_name().into(),
+                    last_name: user.last_name().into(),
+                    abbr: user.abbr().into(),
+                    color: user.color().into(),
                 }),
-            }
+            })
         }
     }
 }
