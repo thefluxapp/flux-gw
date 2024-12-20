@@ -12,10 +12,47 @@ pub mod settings;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        // .route("/login", post(controller::login))
+        .route("/login", post(login))
         .route("/join", post(join))
         .route("/complete", post(complete))
         .route("/me", get(me))
+}
+
+async fn login(
+    State(AppState {
+        auth_service_client,
+        ..
+    }): State<AppState>,
+    Json(data): Json<Value>,
+) -> Result<Json<login::Response>, AppError> {
+    let request = flux_auth_api::LoginRequest {
+        request: Some(data.to_string()),
+    };
+    let response = auth_service_client
+        .clone()
+        .login(request)
+        .await?
+        .into_inner();
+
+    Ok(Json(response.into()))
+}
+
+mod login {
+    use flux_auth_api::LoginResponse;
+    use serde::Serialize;
+
+    #[derive(Serialize)]
+    pub struct Response {
+        jwt: String,
+    }
+
+    impl From<LoginResponse> for Response {
+        fn from(res: LoginResponse) -> Self {
+            Self {
+                jwt: res.jwt().into(),
+            }
+        }
+    }
 }
 
 async fn join(
