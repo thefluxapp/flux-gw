@@ -5,12 +5,12 @@ edition = "2021"
 publish = false
 
 [dependencies]
-flux-auth-api = { git = "https://github.com/thefluxapp/flux-auth.git" }
-flux-core-api = { git = "https://github.com/thefluxapp/flux-core.git" }
+flux-users-api = { git = "https://github.com/thefluxapp/flux-users.git" }
+flux-messages-api = { git = "https://github.com/thefluxapp/flux-messages.git" }
 flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
 
 anyhow = "1.0.94"
-config = { version = "0.14", default-features = false, features = ["toml"] }
+config = { version = "0.15", default-features = false, features = ["toml"] }
 uuid = { version = "1.11.0", features = ["serde", "v7"] }
 jsonwebtoken = "9.3.0"
 log = "0.4.22"

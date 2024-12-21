@@ -25,7 +25,7 @@ async fn login(
     }): State<AppState>,
     Json(data): Json<Value>,
 ) -> Result<Json<login::Response>, AppError> {
-    let request = flux_auth_api::LoginRequest {
+    let request = flux_users_api::LoginRequest {
         request: Some(data.to_string()),
     };
     let response = auth_service_client
@@ -38,7 +38,7 @@ async fn login(
 }
 
 mod login {
-    use flux_auth_api::LoginResponse;
+    use flux_users_api::LoginResponse;
     use serde::Serialize;
 
     #[derive(Serialize)]
@@ -62,7 +62,7 @@ async fn join(
     }): State<AppState>,
     Json(data): Json<JoinRequest>,
 ) -> Result<Json<Value>, AppError> {
-    let request: flux_auth_api::JoinRequest = data.into();
+    let request: flux_users_api::JoinRequest = data.into();
     let response = auth_service_client
         .clone()
         .join(request)
@@ -77,7 +77,7 @@ struct JoinRequest {
     pub email: Option<String>,
 }
 
-impl From<JoinRequest> for flux_auth_api::JoinRequest {
+impl From<JoinRequest> for flux_users_api::JoinRequest {
     fn from(request: JoinRequest) -> Self {
         Self {
             email: request.email,
@@ -92,7 +92,7 @@ async fn complete(
     }): State<AppState>,
     Json(data): Json<Value>,
 ) -> Result<Json<CompleteResponse>, AppError> {
-    let request = flux_auth_api::CompleteRequest {
+    let request = flux_users_api::CompleteRequest {
         request: Some(data.to_string()),
     };
     let response = auth_service_client
@@ -104,7 +104,7 @@ async fn complete(
     Ok(Json(response.into()))
 }
 
-impl Into<CompleteResponse> for flux_auth_api::CompleteResponse {
+impl Into<CompleteResponse> for flux_users_api::CompleteResponse {
     fn into(self) -> CompleteResponse {
         CompleteResponse {
             jwt: self.jwt().into(),
@@ -126,7 +126,7 @@ async fn me(
 ) -> Result<Json<me::Response>, AppError> {
     let response = match user {
         Some(user) => {
-            let request = flux_auth_api::MeRequest {
+            let request = flux_users_api::MeRequest {
                 user_id: Some(user.id.into()),
             };
 
@@ -162,10 +162,10 @@ mod me {
         pub color: String,
     }
 
-    impl TryFrom<flux_auth_api::MeResponse> for Response {
+    impl TryFrom<flux_users_api::MeResponse> for Response {
         type Error = Error;
 
-        fn try_from(res: flux_auth_api::MeResponse) -> Result<Self, Self::Error> {
+        fn try_from(res: flux_users_api::MeResponse) -> Result<Self, Self::Error> {
             let user = res.user.context("NO_USER")?;
 
             Ok(Response {

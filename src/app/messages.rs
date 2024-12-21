@@ -4,8 +4,8 @@ use axum::{
     Json, Router,
 };
 use create_message::Request;
-use flux_auth_api::GetUsersRequest;
-use flux_core_api::{CreateMessageRequest, GetMessageRequest, GetStreamsRequest};
+use flux_messages_api::{CreateMessageRequest, GetMessageRequest, GetStreamsRequest};
+use flux_users_api::GetUsersRequest;
 use uuid::Uuid;
 
 use super::{error::AppError, state::AppState, user::AppUser};
@@ -85,10 +85,10 @@ mod get_message {
     use std::collections::HashMap;
 
     use anyhow::{anyhow, Error};
-    use flux_auth_api::{get_users_response, GetUsersResponse};
-    use flux_core_api::{
+    use flux_messages_api::{
         get_message_response, get_streams_response, GetMessageResponse, GetStreamsResponse,
     };
+    use flux_users_api::{get_users_response, GetUsersResponse};
     use serde::Serialize;
 
     #[derive(Serialize)]
@@ -274,7 +274,7 @@ async fn create_message(
 }
 
 mod create_message {
-    use flux_core_api::CreateMessageResponse;
+    use flux_messages_api::CreateMessageResponse;
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 

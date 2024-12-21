@@ -1,5 +1,5 @@
 use axum::{extract::State, routing::get, Json, Router};
-use flux_core_api::GetUserStreamsRequest;
+use flux_messages_api::GetUserStreamsRequest;
 use get_last_streams::Res;
 
 use super::{error::AppError, state::AppState, user::AppUser};
@@ -21,13 +21,13 @@ async fn get_last_streams(
 ) -> Result<Json<Res>, AppError> {
     let get_last_streams_response = streams_service_client
         .clone()
-        .get_last_streams(flux_core_api::GetLastStreamsRequest::default())
+        .get_last_streams(flux_messages_api::GetLastStreamsRequest::default())
         .await?
         .into_inner();
 
     let get_streams_response = streams_service_client
         .clone()
-        .get_streams(flux_core_api::GetStreamsRequest {
+        .get_streams(flux_messages_api::GetStreamsRequest {
             stream_ids: get_last_streams_response.stream_ids,
         })
         .await?
@@ -35,7 +35,7 @@ async fn get_last_streams(
 
     let get_users_response = users_service_client
         .clone()
-        .get_users(flux_auth_api::GetUsersRequest {
+        .get_users(flux_users_api::GetUsersRequest {
             user_ids: get_streams_response
                 .streams
                 .iter()
@@ -53,7 +53,7 @@ mod get_last_streams {
     use std::collections::HashMap;
 
     use anyhow::{anyhow, Error};
-    use flux_auth_api::get_users_response;
+    use flux_users_api::get_users_response;
     use serde::Serialize;
 
     #[derive(Serialize)]
@@ -81,16 +81,16 @@ mod get_last_streams {
 
     impl
         TryFrom<(
-            flux_core_api::GetStreamsResponse,
-            flux_auth_api::GetUsersResponse,
+            flux_messages_api::GetStreamsResponse,
+            flux_users_api::GetUsersResponse,
         )> for Res
     {
         type Error = Error;
 
         fn try_from(
             (get_streams_response, get_users_response): (
-                flux_core_api::GetStreamsResponse,
-                flux_auth_api::GetUsersResponse,
+                flux_messages_api::GetStreamsResponse,
+                flux_users_api::GetUsersResponse,
             ),
         ) -> Result<Self, Self::Error> {
             let users: HashMap<String, get_users_response::User> = get_users_response
@@ -158,7 +158,7 @@ async fn get_user_streams(
 
     let get_streams_response = streams_service_client
         .clone()
-        .get_streams(flux_core_api::GetStreamsRequest {
+        .get_streams(flux_messages_api::GetStreamsRequest {
             stream_ids: get_user_streams_response.stream_ids,
         })
         .await?
@@ -166,7 +166,7 @@ async fn get_user_streams(
 
     let get_users_response = users_service_client
         .clone()
-        .get_users(flux_auth_api::GetUsersRequest {
+        .get_users(flux_users_api::GetUsersRequest {
             user_ids: get_streams_response
                 .streams
                 .iter()
@@ -184,7 +184,7 @@ mod get_user_streams {
     use std::collections::HashMap;
 
     use anyhow::{anyhow, Error};
-    use flux_auth_api::get_users_response;
+    use flux_users_api::get_users_response;
     use serde::Serialize;
 
     #[derive(Serialize)]
@@ -212,16 +212,16 @@ mod get_user_streams {
 
     impl
         TryFrom<(
-            flux_core_api::GetStreamsResponse,
-            flux_auth_api::GetUsersResponse,
+            flux_messages_api::GetStreamsResponse,
+            flux_users_api::GetUsersResponse,
         )> for Res
     {
         type Error = Error;
 
         fn try_from(
             (get_streams_response, get_users_response): (
-                flux_core_api::GetStreamsResponse,
-                flux_auth_api::GetUsersResponse,
+                flux_messages_api::GetStreamsResponse,
+                flux_users_api::GetUsersResponse,
             ),
         ) -> Result<Self, Self::Error> {
             let users: HashMap<String, get_users_response::User> = get_users_response
