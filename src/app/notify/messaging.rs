@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Error};
 use async_nats::jetstream::consumer::pull::Config;
-use flux_auth_api::GetUsersRequest;
+use flux_users_api::GetUsersRequest;
 use log::error;
 use prost::Message;
 use serde::Serialize;
@@ -35,8 +35,8 @@ pub async fn message(state: AppState) -> Result<(), Error> {
         if let Err(err) = async {
             let msg = msg.map_err(Error::msg)?;
 
-            let flux_core_api::Message { message, stream } =
-                flux_core_api::Message::decode(msg.payload.clone())?;
+            let flux_messages_api::Message { message, stream } =
+                flux_messages_api::Message::decode(msg.payload.clone())?;
 
             if let (Some(message), Some(stream)) = (message, stream) {
                 let get_users_response = users_service_client
@@ -75,9 +75,9 @@ pub async fn message(state: AppState) -> Result<(), Error> {
 
 pub mod message {
     use anyhow::Error;
-    use flux_auth_api::get_users_response;
+    use flux_users_api::get_users_response;
     // use async_nats::jetstream::message;
-    use flux_core_api::message;
+    use flux_messages_api::message;
     use serde::Serialize;
 
     #[derive(Serialize)]

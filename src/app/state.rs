@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use async_nats::jetstream;
-use flux_auth_api::{
-    auth_service_client::AuthServiceClient, users_service_client::UsersServiceClient,
-};
-use flux_core_api::{
+use flux_messages_api::{
     messages_service_client::MessagesServiceClient, streams_service_client::StreamsServiceClient,
+};
+use flux_users_api::{
+    auth_service_client::AuthServiceClient, users_service_client::UsersServiceClient,
 };
 use tokio::fs;
 use tonic::transport::Channel;
