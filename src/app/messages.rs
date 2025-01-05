@@ -189,9 +189,6 @@ mod get_message {
                 Option<&get_streams_response::Stream>,
             ),
         ) -> Result<Self, Self::Error> {
-            dbg!(&message);
-            dbg!(&users);
-
             let user = users
                 .get(&message.user_id().to_string())
                 .ok_or(anyhow!("user not found: {}", message.user_id()))?
