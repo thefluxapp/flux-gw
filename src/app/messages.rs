@@ -55,19 +55,25 @@ async fn get_message(
         .await?
         .into_inner();
 
-    let mut get_users_request = GetUsersRequest::default();
+    let mut user_ids: Vec<String> = vec![];
+
+    if let Some(message) = &get_message_response.message {
+        user_ids.push(message.user_id().into());
+    }
 
     for message in &get_message_response.messages {
-        get_users_request.user_ids.push(message.user_id().into());
+        user_ids.push(message.user_id().into());
     }
 
     for stream in &get_streams_response.streams {
-        get_users_request.user_ids.extend(stream.user_ids.clone());
+        user_ids.extend(stream.user_ids.clone());
     }
+
+    user_ids.dedup();
 
     let get_users_response = users_service_client
         .clone()
-        .get_users(get_users_request)
+        .get_users(GetUsersRequest { user_ids })
         .await?
         .into_inner();
 
@@ -183,9 +189,12 @@ mod get_message {
                 Option<&get_streams_response::Stream>,
             ),
         ) -> Result<Self, Self::Error> {
+            dbg!(&message);
+            dbg!(&users);
+
             let user = users
                 .get(&message.user_id().to_string())
-                .ok_or(anyhow!("user not found"))?
+                .ok_or(anyhow!("user not found: {}", message.user_id()))?
                 .to_owned();
 
             Ok(Self {
