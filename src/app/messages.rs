@@ -24,7 +24,7 @@ async fn get_message(
         streams_service_client,
         ..
     }): State<AppState>,
-) -> Result<Json<get_message::Res>, AppError> {
+) -> Result<Json<get_message::Response>, AppError> {
     // TODO: make requests not seq
 
     let get_message_response = messages_service_client
@@ -92,7 +92,7 @@ mod get_message {
     use serde::Serialize;
 
     #[derive(Serialize)]
-    pub struct Res {
+    pub struct Response {
         message: Message,
         messages: Vec<Message>,
     }
@@ -127,7 +127,7 @@ mod get_message {
     type Users = HashMap<String, get_users_response::User>;
     type Streams = HashMap<String, get_streams_response::Stream>;
 
-    impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Res {
+    impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Response {
         type Error = Error;
 
         fn try_from(
