@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     routing::{get, post},
     Json, Router,
 };
@@ -24,6 +24,7 @@ async fn get_message(
         streams_service_client,
         ..
     }): State<AppState>,
+    Query(req): Query<get_message::Request>,
 ) -> Result<Json<get_message::Response>, AppError> {
     // TODO: make requests not seq
 
@@ -31,6 +32,11 @@ async fn get_message(
         .clone()
         .get_message(GetMessageRequest {
             message_id: Some(message_id.into()),
+            cursor_message_id: if let Some(cursor_message_id) = req.cursor_message_id {
+                Some(cursor_message_id.into())
+            } else {
+                None
+            },
         })
         .await?
         .into_inner();
@@ -95,17 +101,25 @@ mod get_message {
         get_message_response, get_streams_response, GetMessageResponse, GetStreamsResponse,
     };
     use flux_users_api::{get_users_response, GetUsersResponse};
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
+
+    #[derive(Deserialize, Debug)]
+    pub struct Request {
+        pub cursor_message_id: Option<Uuid>,
+    }
 
     #[derive(Serialize)]
     pub struct Response {
         message: Message,
         messages: Vec<Message>,
+        cursor_message_id: Option<String>,
     }
 
     #[derive(Serialize)]
     struct Stream {
         stream_id: String,
+        message_id: String,
         text: Option<String>,
         users: Vec<User>,
     }
@@ -169,6 +183,8 @@ mod get_message {
                         (m.clone(), &users, streams.get(m.stream_id())).try_into()
                     })
                     .collect::<Result<Vec<Message>, Self::Error>>()?,
+
+                cursor_message_id: get_message_response.cursor_message_id,
             })
         }
     }
@@ -216,6 +232,7 @@ mod get_message {
         ) -> Result<Self, Self::Error> {
             Ok(Self {
                 stream_id: stream.stream_id().into(),
+                message_id: stream.message_id().into(),
                 text: stream.text,
                 users: stream
                     .user_ids

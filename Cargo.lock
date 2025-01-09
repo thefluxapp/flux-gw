@@ -520,7 +520,7 @@ dependencies = [
 [[package]]
 name = "flux-messages-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-messages.git#9a90b64093d6cce1cdee3aa8af1cb4e3c1d5b6b0"
+source = "git+https://github.com/thefluxapp/flux-messages.git#d338eb68d6742ed4298777e53c19fe3f9925cddd"
 dependencies = [
  "prost",
  "prost-types",
