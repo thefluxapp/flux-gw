@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     routing::{get, post},
     Json, Router,
 };
@@ -24,13 +24,19 @@ async fn get_message(
         streams_service_client,
         ..
     }): State<AppState>,
-) -> Result<Json<get_message::Res>, AppError> {
+    Query(req): Query<get_message::Request>,
+) -> Result<Json<get_message::Response>, AppError> {
     // TODO: make requests not seq
 
     let get_message_response = messages_service_client
         .clone()
         .get_message(GetMessageRequest {
             message_id: Some(message_id.into()),
+            cursor_message_id: if let Some(cursor_message_id) = req.cursor_message_id {
+                Some(cursor_message_id.into())
+            } else {
+                None
+            },
         })
         .await?
         .into_inner();
@@ -55,19 +61,25 @@ async fn get_message(
         .await?
         .into_inner();
 
-    let mut get_users_request = GetUsersRequest::default();
+    let mut user_ids: Vec<String> = vec![];
+
+    if let Some(message) = &get_message_response.message {
+        user_ids.push(message.user_id().into());
+    }
 
     for message in &get_message_response.messages {
-        get_users_request.user_ids.push(message.user_id().into());
+        user_ids.push(message.user_id().into());
     }
 
     for stream in &get_streams_response.streams {
-        get_users_request.user_ids.extend(stream.user_ids.clone());
+        user_ids.extend(stream.user_ids.clone());
     }
+
+    user_ids.dedup();
 
     let get_users_response = users_service_client
         .clone()
-        .get_users(get_users_request)
+        .get_users(GetUsersRequest { user_ids })
         .await?
         .into_inner();
 
@@ -89,17 +101,25 @@ mod get_message {
         get_message_response, get_streams_response, GetMessageResponse, GetStreamsResponse,
     };
     use flux_users_api::{get_users_response, GetUsersResponse};
-    use serde::Serialize;
+    use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
+
+    #[derive(Deserialize, Debug)]
+    pub struct Request {
+        pub cursor_message_id: Option<Uuid>,
+    }
 
     #[derive(Serialize)]
-    pub struct Res {
+    pub struct Response {
         message: Message,
         messages: Vec<Message>,
+        cursor_message_id: Option<String>,
     }
 
     #[derive(Serialize)]
     struct Stream {
         stream_id: String,
+        message_id: String,
         text: Option<String>,
         users: Vec<User>,
     }
@@ -127,7 +147,7 @@ mod get_message {
     type Users = HashMap<String, get_users_response::User>;
     type Streams = HashMap<String, get_streams_response::Stream>;
 
-    impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Res {
+    impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Response {
         type Error = Error;
 
         fn try_from(
@@ -163,6 +183,8 @@ mod get_message {
                         (m.clone(), &users, streams.get(m.stream_id())).try_into()
                     })
                     .collect::<Result<Vec<Message>, Self::Error>>()?,
+
+                cursor_message_id: get_message_response.cursor_message_id,
             })
         }
     }
@@ -185,7 +207,7 @@ mod get_message {
         ) -> Result<Self, Self::Error> {
             let user = users
                 .get(&message.user_id().to_string())
-                .ok_or(anyhow!("user not found"))?
+                .ok_or(anyhow!("user not found: {}", message.user_id()))?
                 .to_owned();
 
             Ok(Self {
@@ -210,6 +232,7 @@ mod get_message {
         ) -> Result<Self, Self::Error> {
             Ok(Self {
                 stream_id: stream.stream_id().into(),
+                message_id: stream.message_id().into(),
                 text: stream.text,
                 users: stream
                     .user_ids
