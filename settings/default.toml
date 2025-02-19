@@ -16,6 +16,9 @@ endpoint = ""
 [clients.flux_core]
 endpoint = ""
 
+[clients.flux_notify]
+endpoint = ""
+
 [notify]
 capacity = 256
 

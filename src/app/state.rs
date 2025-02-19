@@ -5,6 +5,7 @@ use async_nats::jetstream;
 use flux_messages_api::{
     messages_service_client::MessagesServiceClient, streams_service_client::StreamsServiceClient,
 };
+use flux_notify_api::push_service_client::PushServiceClient;
 use flux_users_api::{
     auth_service_client::AuthServiceClient, users_service_client::UsersServiceClient,
 };
@@ -20,6 +21,7 @@ pub struct AppState {
     pub users_service_client: UsersServiceClient<Channel>,
     pub streams_service_client: StreamsServiceClient<Channel>,
     pub messages_service_client: MessagesServiceClient<Channel>,
+    pub push_service_client: PushServiceClient<Channel>,
     pub public_key: Vec<u8>,
     pub notify: NotifyState,
     pub js: Arc<AppJS>,
@@ -44,6 +46,9 @@ impl AppState {
         let messages_service_client =
             Self::messages_service_client(settings.clients.flux_core.endpoint.clone()).await?;
 
+        let push_service_client =
+            Self::push_service_client(settings.clients.flux_notify.endpoint.clone()).await?;
+
         let public_key = fs::read_to_string(&settings.auth.public_key_file)
             .await?
             .into_bytes();
@@ -54,6 +59,7 @@ impl AppState {
             users_service_client,
             streams_service_client,
             messages_service_client,
+            push_service_client,
             public_key,
             notify,
             js,
@@ -82,5 +88,11 @@ impl AppState {
         let ch = tonic::transport::Endpoint::new(dst)?.connect_lazy();
 
         Ok(MessagesServiceClient::new(ch))
+    }
+
+    async fn push_service_client(dst: String) -> Result<PushServiceClient<Channel>, Error> {
+        let ch = tonic::transport::Endpoint::new(dst)?.connect_lazy();
+
+        Ok(PushServiceClient::new(ch))
     }
 }

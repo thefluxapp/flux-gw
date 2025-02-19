@@ -495,6 +495,7 @@ dependencies = [
  "config",
  "flux-lib",
  "flux-messages-api",
+ "flux-notify-api",
  "flux-users-api",
  "jsonwebtoken",
  "log",
@@ -524,6 +525,16 @@ source = "git+https://github.com/thefluxapp/flux-messages.git#d338eb68d6742ed429
 dependencies = [
  "prost",
  "prost-types",
+ "tonic",
+ "tonic-build",
+]
+
+[[package]]
+name = "flux-notify-api"
+version = "0.1.0"
+source = "git+https://github.com/thefluxapp/flux-notify.git?branch=dev#88ef580a24fcb51b1a83f68627b60e417da56d2d"
+dependencies = [
+ "prost",
  "tonic",
  "tonic-build",
 ]

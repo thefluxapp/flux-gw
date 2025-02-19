@@ -24,6 +24,7 @@ pub struct HttpSettings {
 pub struct ClientsSettings {
     pub flux_auth: ClientSettings,
     pub flux_core: ClientSettings,
+    pub flux_notify: ClientSettings,
 }
 
 #[derive(Deserialize, Clone)]
