@@ -9,7 +9,7 @@ mod auth;
 mod error;
 mod messages;
 mod notify;
-mod push;
+mod pushes;
 mod settings;
 mod state;
 mod streams;
@@ -34,7 +34,7 @@ async fn http_and_grpc(state: &AppState) -> Result<(), Error> {
                 .nest("/auth", auth::router())
                 .nest("/streams", streams::router())
                 .nest("/messages", messages::router())
-                .nest("/push", push::router())
+                .nest("/pushes", pushes::router())
                 .nest("/notify", notify::router()),
         )
         .with_state(state.to_owned());

@@ -59,8 +59,8 @@ async fn create_push(
         .clone()
         .create_web_push(CreateWebPushRequest {
             endpoint: Some(req.endpoint),
-            authentication_secret: Some(req.authentication_secret),
-            public_key: Some(req.public_key),
+            authentication_secret: Some(req.keys.authentication_secret),
+            public_key: Some(req.keys.public_key),
             device_id: Some(req.device_id),
             user_id: Some(user.id.into()),
         })
@@ -81,7 +81,16 @@ mod create_push {
     pub(super) struct Request {
         pub endpoint: String,
         pub device_id: String,
+        pub keys: Keys,
+        // pub authentication_secret: String,
+        // pub public_key: String,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub(super) struct Keys {
+        #[serde(rename = "auth")]
         pub authentication_secret: String,
+        #[serde(rename = "p256dh")]
         pub public_key: String,
     }
 
