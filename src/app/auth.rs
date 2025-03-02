@@ -144,8 +144,9 @@ async fn me(
 }
 
 mod me {
-    use anyhow::{Context, Error};
     use serde::Serialize;
+
+    use crate::app::error::AppError;
 
     #[derive(Serialize)]
     pub struct Response {
@@ -163,10 +164,10 @@ mod me {
     }
 
     impl TryFrom<flux_users_api::MeResponse> for Response {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(res: flux_users_api::MeResponse) -> Result<Self, Self::Error> {
-            let user = res.user.context("NO_USER")?;
+            let user = res.user.ok_or(AppError::NoEntity)?;
 
             Ok(Response {
                 user: Some(User {

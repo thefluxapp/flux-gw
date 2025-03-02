@@ -32,10 +32,15 @@ async fn get_vapid(
 mod get_vapid {
     use flux_notify_api::GetVapidResponse;
     use serde::Serialize;
+    use serde_with::base64::{Base64, UrlSafe};
+    use serde_with::formats::Unpadded;
+    use serde_with::serde_as;
 
+    #[serde_as]
     #[derive(Serialize)]
     pub(super) struct Response {
-        public_key: String,
+        #[serde_as(as = "Base64<UrlSafe, Unpadded>")]
+        public_key: Vec<u8>,
     }
 
     impl From<GetVapidResponse> for Response {
@@ -55,6 +60,8 @@ async fn create_push(
     user: AppUser,
     Json(req): Json<create_push::Request>,
 ) -> Result<Json<create_push::Response>, AppError> {
+    dbg!(&req);
+
     let res = push_service_client
         .clone()
         .create_web_push(CreateWebPushRequest {
@@ -67,12 +74,17 @@ async fn create_push(
         .await?
         .into_inner();
 
+    dbg!(&res);
+
     Ok(Json(res.into()))
 }
 
 mod create_push {
     use flux_notify_api::CreateWebPushResponse;
     use serde::{Deserialize, Serialize};
+    use serde_with::base64::{Base64, UrlSafe};
+    use serde_with::formats::Unpadded;
+    use serde_with::serde_as;
 
     #[derive(Serialize)]
     pub(super) struct Response {}
@@ -82,16 +94,17 @@ mod create_push {
         pub endpoint: String,
         pub device_id: String,
         pub keys: Keys,
-        // pub authentication_secret: String,
-        // pub public_key: String,
     }
 
+    #[serde_as]
     #[derive(Deserialize, Debug)]
     pub(super) struct Keys {
         #[serde(rename = "auth")]
-        pub authentication_secret: String,
+        #[serde_as(as = "Base64<UrlSafe, Unpadded>")]
+        pub authentication_secret: Vec<u8>,
+        #[serde_as(as = "Base64<UrlSafe, Unpadded>")]
         #[serde(rename = "p256dh")]
-        pub public_key: String,
+        pub public_key: Vec<u8>,
     }
 
     impl From<CreateWebPushResponse> for Response {

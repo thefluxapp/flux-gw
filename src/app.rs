@@ -1,6 +1,6 @@
-use anyhow::Error;
 use async_nats::jetstream;
 use axum::{routing::get, Router};
+use flux_lib::error::Error;
 use log::info;
 use settings::AppSettings;
 use state::AppState;
@@ -20,12 +20,12 @@ pub async fn run() -> Result<(), Error> {
     let state = AppState::new(settings).await?;
 
     messaging(&state).await?;
-    http_and_grpc(&state).await?;
+    http(&state).await?;
 
     Ok(())
 }
 
-async fn http_and_grpc(state: &AppState) -> Result<(), Error> {
+async fn http(state: &AppState) -> Result<(), Error> {
     let router = Router::new()
         .nest(
             "/api",

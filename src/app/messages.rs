@@ -96,13 +96,15 @@ async fn get_message(
 mod get_message {
     use std::collections::HashMap;
 
-    use anyhow::{anyhow, Error};
+    use flux_lib::error::Error;
     use flux_messages_api::{
         get_message_response, get_streams_response, GetMessageResponse, GetStreamsResponse,
     };
     use flux_users_api::{get_users_response, GetUsersResponse};
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
+
+    use crate::app::error::AppError;
 
     #[derive(Deserialize, Debug)]
     pub struct Request {
@@ -148,7 +150,7 @@ mod get_message {
     type Streams = HashMap<String, get_streams_response::Stream>;
 
     impl TryFrom<(GetMessageResponse, GetUsersResponse, GetStreamsResponse)> for Response {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(
             (get_message_response, get_users_response, get_streams_response): (
@@ -169,9 +171,7 @@ mod get_message {
                 .map(|v| (v.stream_id().into(), v))
                 .collect();
 
-            let message = get_message_response
-                .message
-                .ok_or(anyhow!("message not found"))?;
+            let message = get_message_response.message.ok_or(AppError::NoEntity)?;
 
             Ok(Self {
                 message: (message.clone(), &users, streams.get(message.stream_id())).try_into()?,
@@ -196,7 +196,7 @@ mod get_message {
             Option<&get_streams_response::Stream>,
         )> for Message
     {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(
             (message, users, stream): (
@@ -207,7 +207,7 @@ mod get_message {
         ) -> Result<Self, Self::Error> {
             let user = users
                 .get(&message.user_id().to_string())
-                .ok_or(anyhow!("user not found: {}", message.user_id()))?
+                .ok_or(AppError::NoEntity)?
                 .to_owned();
 
             Ok(Self {
@@ -240,7 +240,7 @@ mod get_message {
                     .map(|user_id| -> Result<User, Error> {
                         let user = users
                             .get(&user_id.to_string())
-                            .ok_or(anyhow!("user not found"))?
+                            .ok_or(AppError::NoEntity)?
                             .to_owned();
 
                         Ok(User {

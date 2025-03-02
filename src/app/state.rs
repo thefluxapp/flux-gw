@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use anyhow::Error;
 use async_nats::jetstream;
+use flux_lib::error::Error;
 use flux_messages_api::{
     messages_service_client::MessagesServiceClient, streams_service_client::StreamsServiceClient,
 };

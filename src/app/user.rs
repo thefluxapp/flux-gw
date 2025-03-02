@@ -1,4 +1,3 @@
-use anyhow::Error;
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
@@ -9,6 +8,7 @@ use axum_extra::{
     headers::{authorization::Bearer, Authorization},
     TypedHeader,
 };
+use flux_lib::error::Error;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
 use serde::Deserialize;
 use uuid::Uuid;

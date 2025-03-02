@@ -1,6 +1,7 @@
 use std::env;
 
 use config::{Config, ConfigError, Environment, File};
+use flux_lib::settings::{HttpSettings, NATSSettings};
 use serde::Deserialize;
 
 use super::{auth::settings::AuthSettings, notify::settings::NotifySettings};
@@ -16,11 +17,6 @@ pub struct AppSettings {
 }
 
 #[derive(Deserialize, Clone)]
-pub struct HttpSettings {
-    pub endpoint: String,
-}
-
-#[derive(Deserialize, Clone)]
 pub struct ClientsSettings {
     pub flux_auth: ClientSettings,
     pub flux_core: ClientSettings,
@@ -30,12 +26,6 @@ pub struct ClientsSettings {
 #[derive(Deserialize, Clone)]
 pub struct ClientSettings {
     pub endpoint: String,
-}
-
-#[derive(Deserialize, Clone)]
-pub struct NATSSettings {
-    pub endpoint: String,
-    pub stream: String,
 }
 
 impl AppSettings {
