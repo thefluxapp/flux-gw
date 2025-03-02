@@ -52,9 +52,10 @@ async fn get_last_streams(
 mod get_last_streams {
     use std::collections::HashMap;
 
-    use anyhow::{anyhow, Error};
     use flux_users_api::get_users_response;
     use serde::Serialize;
+
+    use crate::app::error::AppError;
 
     #[derive(Serialize)]
     pub struct Res {
@@ -85,7 +86,7 @@ mod get_last_streams {
             flux_users_api::GetUsersResponse,
         )> for Res
     {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(
             (get_streams_response, get_users_response): (
@@ -123,10 +124,10 @@ mod get_last_streams {
     }
 
     impl TryFrom<Option<&get_users_response::User>> for User {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(user: Option<&get_users_response::User>) -> Result<Self, Self::Error> {
-            let user = user.ok_or(anyhow!("user not found"))?.to_owned();
+            let user = user.ok_or(AppError::NoEntity)?.to_owned();
 
             Ok(Self {
                 user_id: user.user_id().into(),
@@ -183,9 +184,10 @@ async fn get_user_streams(
 mod get_user_streams {
     use std::collections::HashMap;
 
-    use anyhow::{anyhow, Error};
     use flux_users_api::get_users_response;
     use serde::Serialize;
+
+    use crate::app::error::AppError;
 
     #[derive(Serialize)]
     pub struct Res {
@@ -216,7 +218,7 @@ mod get_user_streams {
             flux_users_api::GetUsersResponse,
         )> for Res
     {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(
             (get_streams_response, get_users_response): (
@@ -254,10 +256,10 @@ mod get_user_streams {
     }
 
     impl TryFrom<Option<&get_users_response::User>> for User {
-        type Error = Error;
+        type Error = AppError;
 
         fn try_from(user: Option<&get_users_response::User>) -> Result<Self, Self::Error> {
-            let user = user.ok_or(anyhow!("user not found"))?.to_owned();
+            let user = user.ok_or(AppError::NoEntity)?.to_owned();
 
             Ok(Self {
                 user_id: user.user_id().into(),

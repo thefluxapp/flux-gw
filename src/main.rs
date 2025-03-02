@@ -1,4 +1,4 @@
-use anyhow::Error;
+use flux_lib::error::Error;
 
 mod app;
 

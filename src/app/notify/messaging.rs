@@ -1,12 +1,12 @@
-use anyhow::{anyhow, Error};
 use async_nats::jetstream::consumer::pull::Config;
+use flux_lib::error::Error;
 use flux_users_api::GetUsersRequest;
 use log::error;
 use prost::Message;
 use serde::Serialize;
 use tokio_stream::StreamExt as _;
 
-use crate::app::state::AppState;
+use crate::app::{error::AppError, state::AppState};
 
 pub async fn message(state: AppState) -> Result<(), Error> {
     let AppState {
@@ -51,7 +51,7 @@ pub async fn message(state: AppState) -> Result<(), Error> {
                     .users
                     .into_iter()
                     .find(|x| x.user_id() == message.user_id())
-                    .ok_or(anyhow!("NO_USER"))?;
+                    .ok_or(AppError::NoEntity)?;
 
                 let event = Event::Message((message, stream, user).try_into()?);
 
@@ -74,10 +74,9 @@ pub async fn message(state: AppState) -> Result<(), Error> {
 }
 
 pub mod message {
-    use anyhow::Error;
-    use flux_users_api::get_users_response;
-    // use async_nats::jetstream::message;
+    use flux_lib::error::Error;
     use flux_messages_api::message;
+    use flux_users_api::get_users_response;
     use serde::Serialize;
 
     #[derive(Serialize)]

@@ -1,42 +1,32 @@
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
-use serde_json::json;
+use axum_extra::typed_header::TypedHeaderRejection;
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let payload = json!({
-            "code": "XXX", "message": self.0.to_string()
-        });
-
-        (StatusCode::BAD_REQUEST, Json(payload)).into_response()
+        match self {
+            AppError::Status(status) => match status.code() {
+                tonic::Code::InvalidArgument => StatusCode::UNPROCESSABLE_ENTITY,
+                _ => StatusCode::BAD_REQUEST,
+            },
+            _ => StatusCode::BAD_REQUEST,
+        }
+        .into_response()
     }
 }
 
-#[derive(Debug)]
-pub struct AppError(anyhow::Error);
-
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum AppError {
+    #[error("there is not entity")]
+    NoEntity,
+    #[error(transparent)]
+    Status(#[from] tonic::Status),
+    #[error(transparent)]
+    Serde(#[from] serde_json::Error),
+    #[error(transparent)]
+    Auth(#[from] TypedHeaderRejection),
+    #[error(transparent)]
+    Other(#[from] flux_lib::error::Error),
 }
-
-// impl From<async_nats::error::Error<async_nats::jetstream::stream::ConsumerErrorKind>> for AppError {
-//     fn from(_: async_nats::error::Error<async_nats::jetstream::stream::ConsumerErrorKind>) -> Self {
-//         Self::DUMMY
-//     }
-// }
-
-// #[derive(Error, Debug)]
-// pub enum AppError {
-//     #[error("entity not found")]
-//     DUMMY,
-//     #[error(transparent)]
-//     Other(#[from] anyhow::Error),
-// }
