@@ -1,6 +1,6 @@
 use async_nats::jetstream;
 use axum::{routing::get, Router};
-use flux_lib::error::Error;
+use flux_lib::{error::Error, settings::Settings as _};
 use log::info;
 use settings::AppSettings;
 use state::AppState;
@@ -48,7 +48,7 @@ async fn http(state: &AppState) -> Result<(), Error> {
 }
 
 async fn messaging(state: &AppState) -> Result<(), Error> {
-    notify::messaging(&state).await.unwrap();
+    notify::messaging(&state).await?;
 
     info!("messaging: started");
 

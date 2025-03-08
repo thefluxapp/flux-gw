@@ -46,7 +46,7 @@ async fn extract_user(bearer: Bearer, public_key_file: &Vec<u8>) -> Result<AppUs
     Ok(AppUser { id: claims.sub })
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AppUser {
     pub id: Uuid,
 }

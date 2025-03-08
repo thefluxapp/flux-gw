@@ -3,9 +3,12 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use axum_extra::typed_header::TypedHeaderRejection;
+use log::debug;
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
+        debug!("{}", self.to_string());
+
         match self {
             AppError::Status(status) => match status.code() {
                 tonic::Code::InvalidArgument => StatusCode::UNPROCESSABLE_ENTITY,

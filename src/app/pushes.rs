@@ -60,8 +60,6 @@ async fn create_push(
     user: AppUser,
     Json(req): Json<create_push::Request>,
 ) -> Result<Json<create_push::Response>, AppError> {
-    dbg!(&req);
-
     let res = push_service_client
         .clone()
         .create_web_push(CreateWebPushRequest {
@@ -73,8 +71,6 @@ async fn create_push(
         })
         .await?
         .into_inner();
-
-    dbg!(&res);
 
     Ok(Json(res.into()))
 }

@@ -31,7 +31,7 @@ impl AppState {
     pub async fn new(settings: AppSettings) -> Result<Self, Error> {
         let notify = NotifyState::new(settings.notify.clone());
 
-        let nats = async_nats::connect(&settings.nats.endpoint).await.unwrap();
+        let nats = async_nats::connect(&settings.nats.endpoint).await?;
         let js = Arc::new(jetstream::new(nats));
 
         let auth_service_client =

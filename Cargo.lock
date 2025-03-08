@@ -565,9 +565,10 @@ dependencies = [
 [[package]]
 name = "flux-lib"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-lib.git#240e2cd8ea679885a7e4c18cd3fcd0a35cd9e7bf"
+source = "git+https://github.com/thefluxapp/flux-lib.git#f4b3bec942441b5baace0bacef2b1f1156410675"
 dependencies = [
  "anyhow",
+ "config",
  "serde",
  "tracing",
  "tracing-subscriber",
