@@ -9,7 +9,11 @@ use flux_notify_api::push_service_client::PushServiceClient;
 use flux_users_api::{
     auth_service_client::AuthServiceClient, users_service_client::UsersServiceClient,
 };
-use tokio::fs;
+use log::info;
+use tokio::{
+    fs, signal,
+    sync::watch::{self, Receiver},
+};
 use tonic::transport::Channel;
 
 use super::{notify::state::NotifyState, settings::AppSettings, AppJS};
@@ -25,6 +29,7 @@ pub struct AppState {
     pub public_key: Vec<u8>,
     pub notify: NotifyState,
     pub js: Arc<AppJS>,
+    pub shutdown: ShutdownState,
 }
 
 impl AppState {
@@ -53,6 +58,8 @@ impl AppState {
             .await?
             .into_bytes();
 
+        let shutdown = ShutdownState::new();
+
         Ok(Self {
             settings,
             auth_service_client,
@@ -63,6 +70,7 @@ impl AppState {
             public_key,
             notify,
             js,
+            shutdown,
         })
     }
 
@@ -94,5 +102,40 @@ impl AppState {
         let ch = tonic::transport::Endpoint::new(dst)?.connect_lazy();
 
         Ok(PushServiceClient::new(ch))
+    }
+}
+
+#[derive(Clone)]
+pub struct ShutdownState {
+    pub rx: Receiver<()>,
+}
+
+impl ShutdownState {
+    pub fn new() -> Self {
+        let (tx, rx) = watch::channel(());
+
+        tokio::spawn(async move {
+            let ctrl_c = async {
+                signal::ctrl_c().await.ok();
+            };
+
+            let terminate = async {
+                match signal::unix::signal(signal::unix::SignalKind::terminate()) {
+                    Ok(mut signal_kind) => signal_kind.recv().await,
+                    _ => None,
+                };
+            };
+
+            tokio::select! {
+                _ = ctrl_c => {},
+                _ = terminate => {},
+            };
+
+            tx.send(()).ok();
+
+            info!("app: graceful shutdown");
+        });
+
+        Self { rx }
     }
 }

@@ -40,9 +40,15 @@ async fn http(state: &AppState) -> Result<(), Error> {
         .with_state(state.to_owned());
 
     let listener = tokio::net::TcpListener::bind(&state.settings.http.endpoint).await?;
+    let mut shutdown_rx = state.shutdown.rx.to_owned();
 
     info!("app: started");
-    axum::serve(listener, router).await?;
+
+    axum::serve(listener, router)
+        .with_graceful_shutdown(async move {
+            shutdown_rx.changed().await.ok();
+        })
+        .await?;
 
     Ok(())
 }

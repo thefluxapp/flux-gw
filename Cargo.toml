@@ -15,6 +15,7 @@ config = { version = "0.15", default-features = false, features = ["toml"] }
 uuid = { version = "1.15.1", features = ["serde", "v7"] }
 jsonwebtoken = "9.3.1"
 log = "0.4.26"
+async-stream = "0.3.6"
 
 axum = "0.7.9"
 axum-extra = { version = "0.9.6", features = ["typed-header"] }
