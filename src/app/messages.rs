@@ -12,7 +12,7 @@ use super::{error::AppError, state::AppState, user::AppUser};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/:message_id", get(get_message))
+        .route("/{message_id}", get(get_message))
         .route("/", post(create_message))
 }
 

@@ -1,6 +1,5 @@
 use axum::{
-    async_trait,
-    extract::{FromRef, FromRequestParts},
+    extract::{FromRef, FromRequestParts, OptionalFromRequestParts},
     http::request::Parts,
     RequestPartsExt as _,
 };
@@ -15,7 +14,6 @@ use uuid::Uuid;
 
 use super::{error::AppError, state::AppState};
 
-#[async_trait]
 impl<S> FromRequestParts<S> for AppUser
 where
     AppState: FromRef<S>,
@@ -33,6 +31,24 @@ where
         let user = extract_user(bearer, &public_key).await?;
 
         Ok(user)
+    }
+}
+
+impl<S> OptionalFromRequestParts<S> for AppUser
+where
+    AppState: FromRef<S>,
+    S: Send + Sync,
+{
+    type Rejection = AppError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        match <AppUser as FromRequestParts<S>>::from_request_parts(parts, state).await {
+            Ok(user) => Ok(Some(user)),
+            Err(_) => Ok(None),
+        }
     }
 }
 
