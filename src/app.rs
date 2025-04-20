@@ -1,9 +1,9 @@
 use async_nats::jetstream;
 use axum::{routing::get, Router};
 use flux_lib::error::Error;
-use log::info;
 use settings::AppSettings;
 use state::AppState;
+use tracing::info;
 
 mod auth;
 mod error;
@@ -41,7 +41,7 @@ async fn http(state: &AppState) -> Result<(), Error> {
 
     let listener = tokio::net::TcpListener::bind(&state.settings.http.endpoint).await?;
 
-    info!("app: started");
+    info!("app: started on {}", listener.local_addr()?);
     axum::serve(listener, router).await?;
 
     Ok(())

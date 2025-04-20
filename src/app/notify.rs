@@ -1,46 +1,37 @@
 use axum::{
-    extract::State,
-    response::{
-        sse::{Event, KeepAlive},
-        Sse,
-    },
-    routing::get,
+    extract::{State, WebSocketUpgrade},
+    response::IntoResponse,
+    routing::any,
     Router,
 };
-use tokio_stream::{
-    wrappers::{errors::BroadcastStreamRecvError, BroadcastStream},
-    Stream,
-};
+use uuid::Uuid;
 
-use super::{error::AppError, state::AppState, user::AppUser};
+use super::{error::AppError, state::AppState};
 
 mod messaging;
+mod service;
 pub(super) mod settings;
 pub(super) mod state;
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/", get(notify))
+    Router::new().route("/", any(notify))
 }
 
 async fn notify(
     State(AppState { notify, .. }): State<AppState>,
-    user: Option<AppUser>,
-) -> Sse<impl Stream<Item = Result<Event, BroadcastStreamRecvError>>> {
-    // TODO: How to handle BroadcastStreamRecvError?
+    wsu: WebSocketUpgrade,
+) -> Result<impl IntoResponse, AppError> {
+    let notify_id = Uuid::now_v7();
 
-    if let Some(u) = user {
-        println!("{}", &u.id);
-    } else {
-        println!("NO USER");
-    };
+    let res = wsu.on_upgrade(move |ws| async move {
+        let _ = service::notify(ws, notify.clone(), notify_id).await;
+    });
 
-    let rx = notify.tx.subscribe();
-
-    Sse::new(BroadcastStream::new(rx)).keep_alive(KeepAlive::default())
+    Ok(res)
 }
 
 pub async fn messaging(state: &AppState) -> Result<(), AppError> {
-    tokio::spawn(messaging::message(state.clone()));
+    tokio::spawn(messaging::event(state.clone()));
 
     Ok(())
 }
