@@ -10,18 +10,15 @@ use super::state::{NotifyState, SubscribedStreams};
 
 pub async fn event(state: AppState, req: event::Request) -> Result<(), AppError> {
     let event: event::Event = req.payload.into();
-    dbg!(&event);
 
     if let Err(err) = state.notify.tx.send(event) {
-        error!("TX: {}", err);
+        error!("{}", err);
     };
 
     Ok(())
 }
 
 pub mod event {
-    // use flux_notify_api::event::Payload;
-
     use flux_notify_api::event::Payload;
     use serde::Serialize;
 
@@ -34,28 +31,6 @@ pub mod event {
         Message { message_id: String, text: String },
     }
 }
-
-// pub mod event {
-//     use axum::extract::ws;
-//     use serde::Serialize;
-
-//     use crate::app::error::AppError;
-
-//     #[derive(Debug)]
-//     pub struct Request {}
-
-//     #[derive(Serialize)]
-//     #[serde(rename_all = "snake_case")]
-//     #[derive(Clone)]
-//     pub enum Event {
-//         Message {
-//             message_id: String,
-//             text: String,
-//             code: String,
-//         },
-//     }
-
-// }
 
 pub async fn notify(
     mut ws: WebSocket,
