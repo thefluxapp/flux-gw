@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 flux-users-api = { git = "https://github.com/thefluxapp/flux-users.git" }
 flux-messages-api = { git = "https://github.com/thefluxapp/flux-messages.git" }
-flux-notify-api = { git = "https://github.com/thefluxapp/flux-notify.git", branch = "dev" }
+flux-notify-api = { git = "https://github.com/thefluxapp/flux-notify.git" }
 flux-lib = { git = "https://github.com/thefluxapp/flux-lib.git" }
 
 thiserror = "2.0.12"
