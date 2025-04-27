@@ -17,6 +17,12 @@ impl IntoResponse for AppError {
     }
 }
 
+impl From<uuid::Error> for AppError {
+    fn from(error: uuid::Error) -> Self {
+        AppError::Other(flux_lib::error::Error::new(error))
+    }
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum AppError {
     #[error("there is not entity")]
@@ -26,7 +32,11 @@ pub enum AppError {
     #[error(transparent)]
     Serde(#[from] serde_json::Error),
     #[error(transparent)]
+    Decode(#[from] prost::DecodeError),
+    #[error(transparent)]
     Auth(#[from] TypedHeaderRejection),
+    #[error("RECV")]
+    Recv(#[from] tokio::sync::broadcast::error::RecvError),
     #[error(transparent)]
     Other(#[from] flux_lib::error::Error),
 }

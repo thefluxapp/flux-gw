@@ -22,6 +22,6 @@ endpoint = ""
 [notify]
 capacity = 256
 
-[notify.messaging.message]
-subjects = ["flux.messages.message"]
-consumer = "flux-gw-notify-message"
+[notify.messaging.event]
+subjects = ["flux.notify.event"]
+consumer = "flux-gw-notify"

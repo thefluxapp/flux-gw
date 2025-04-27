@@ -8,11 +8,11 @@ pub struct NotifySettings {
 
 #[derive(Deserialize, Clone)]
 pub struct MessagingSettings {
-    pub message: MessagingMessageSettings,
+    pub event: MessagingEventSettings,
 }
 
 #[derive(Deserialize, Clone)]
-pub struct MessagingMessageSettings {
+pub struct MessagingEventSettings {
     pub subjects: Vec<String>,
     pub consumer: String,
 }
