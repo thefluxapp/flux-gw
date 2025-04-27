@@ -552,7 +552,7 @@ dependencies = [
 [[package]]
 name = "flux-notify-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-notify.git?branch=dev#08de78708d49487cf15e8a77570e2f9acf97ead0"
+source = "git+https://github.com/thefluxapp/flux-notify.git?branch=dev#0e37ca3936035eb7c1e04d226797b643e4743a48"
 dependencies = [
  "prost",
  "prost-types",

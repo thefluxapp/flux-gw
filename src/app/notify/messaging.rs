@@ -21,19 +21,15 @@ pub async fn event(state: AppState) -> Result<(), Error> {
 
 mod event {
     use async_nats::jetstream::{
+        self,
         consumer::{pull::Config, Consumer},
-        Message,
     };
     use flux_lib::error::Error;
-    use flux_notify_api::event::Payload;
     use prost::Message as _;
 
     use crate::app::{
         error::AppError,
-        notify::service::{
-            self,
-            event::{Event, Request},
-        },
+        notify::service::{self, event::Request},
         settings::AppSettings,
         state::AppState,
         AppJS,
@@ -52,34 +48,23 @@ mod event {
             .await?)
     }
 
-    pub async fn handler(state: AppState, message: Message) -> Result<(), Error> {
+    pub async fn handler(state: AppState, message: jetstream::Message) -> Result<(), Error> {
         service::event(state, message.clone().try_into()?).await?;
 
         message.ack().await.map_err(Error::msg)?;
         Ok(())
     }
 
-    impl TryFrom<Message> for Request {
+    impl TryFrom<jetstream::Message> for Request {
         type Error = AppError;
 
-        fn try_from(message: Message) -> Result<Self, Self::Error> {
+        fn try_from(message: jetstream::Message) -> Result<Self, Self::Error> {
             let flux_notify_api::Event { payload } =
                 flux_notify_api::Event::decode(message.payload.as_ref())?;
 
             let payload = payload.ok_or(AppError::NoEntity)?;
 
             Ok(Self { payload })
-        }
-    }
-
-    impl From<Payload> for Event {
-        fn from(payload: Payload) -> Self {
-            match payload {
-                Payload::Message(message) => Self::Message {
-                    message_id: message.message_id().into(),
-                    text: message.text().into(),
-                },
-            }
         }
     }
 }
