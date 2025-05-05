@@ -37,6 +37,7 @@ async fn get_message(
             } else {
                 None
             },
+            limit: None,
         })
         .await?
         .into_inner();
