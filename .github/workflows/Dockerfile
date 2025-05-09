@@ -3,7 +3,7 @@ FROM rust:alpine AS builder
 WORKDIR /app
 
 COPY . .
-RUN apk --no-cache add musl-dev protoc protobuf
+RUN apk --no-cache add musl-dev protoc protobuf-dev
 RUN cargo build --release -p flux-gw
 
 FROM alpine
