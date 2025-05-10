@@ -18,8 +18,8 @@ pub struct AppSettings {
 
 #[derive(Deserialize, Clone)]
 pub struct ClientsSettings {
-    pub flux_auth: ClientSettings,
-    pub flux_core: ClientSettings,
+    pub flux_users: ClientSettings,
+    pub flux_messages: ClientSettings,
     pub flux_notify: ClientSettings,
 }
 
