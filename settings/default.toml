@@ -10,10 +10,10 @@ public_key_file = ""
 endpoint = "0.0.0.0:4222"
 stream = "flux"
 
-[clients.flux_auth]
+[clients.flux_users]
 endpoint = ""
 
-[clients.flux_core]
+[clients.flux_messages]
 endpoint = ""
 
 [clients.flux_notify]
