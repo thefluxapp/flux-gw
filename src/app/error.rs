@@ -8,10 +8,10 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         match self {
             AppError::Status(status) => match status.code() {
-                tonic::Code::InvalidArgument => StatusCode::UNPROCESSABLE_ENTITY,
-                _ => StatusCode::BAD_REQUEST,
+                tonic::Code::InvalidArgument => (StatusCode::UNPROCESSABLE_ENTITY, "".to_string()),
+                code => (StatusCode::BAD_REQUEST, code.to_string()),
             },
-            _ => StatusCode::BAD_REQUEST,
+            error => (StatusCode::BAD_REQUEST, error.to_string()),
         }
         .into_response()
     }
