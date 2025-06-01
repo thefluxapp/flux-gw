@@ -35,16 +35,16 @@ impl AppState {
         let js = Arc::new(jetstream::new(nats));
 
         let auth_service_client =
-            Self::auth_service_client(settings.clients.flux_auth.endpoint.clone()).await?;
+            Self::auth_service_client(settings.clients.flux_users.endpoint.clone()).await?;
 
         let users_service_client =
-            Self::users_service_client(settings.clients.flux_auth.endpoint.clone()).await?;
+            Self::users_service_client(settings.clients.flux_users.endpoint.clone()).await?;
 
         let streams_service_client =
-            Self::streams_service_client(settings.clients.flux_core.endpoint.clone()).await?;
+            Self::streams_service_client(settings.clients.flux_messages.endpoint.clone()).await?;
 
         let messages_service_client =
-            Self::messages_service_client(settings.clients.flux_core.endpoint.clone()).await?;
+            Self::messages_service_client(settings.clients.flux_messages.endpoint.clone()).await?;
 
         let push_service_client =
             Self::push_service_client(settings.clients.flux_notify.endpoint.clone()).await?;
