@@ -8,6 +8,8 @@ use flux_messages_api::{CreateMessageRequest, GetMessageRequest, GetStreamsReque
 use flux_users_api::GetUsersRequest;
 use uuid::Uuid;
 
+use crate::app::locale::AppLocale;
+
 use super::{error::AppError, state::AppState, user::AppUser};
 
 pub fn router() -> Router<AppState> {
@@ -278,18 +280,20 @@ async fn create_message(
         ..
     }): State<AppState>,
     user: AppUser,
-    Json(data): Json<Request>,
+    locale: AppLocale,
+    Json(req): Json<Request>,
 ) -> Result<Json<create_message::Response>, AppError> {
     let res = messages_service_client
         .clone()
         .create_message(CreateMessageRequest {
-            text: Some(data.text),
-            message_id: match data.message_id {
+            text: Some(req.text),
+            message_id: match req.message_id {
                 Some(message_id) => Some(message_id.into()),
                 None => None,
             },
-            code: Some(data.code),
+            code: Some(req.code),
             user_id: Some(user.id.into()),
+            locale: Some(locale.to_string()),
         })
         .await?
         .into_inner();

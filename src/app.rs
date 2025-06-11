@@ -7,6 +7,7 @@ use tracing::info;
 
 mod auth;
 mod error;
+mod locale;
 mod messages;
 mod notify;
 mod pushes;
