@@ -6,6 +6,8 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::app::locale::AppLocale;
+
 use super::{error::AppError, state::AppState, user::AppUser};
 
 pub mod settings;
@@ -90,18 +92,33 @@ async fn complete(
         auth_service_client,
         ..
     }): State<AppState>,
-    Json(data): Json<Value>,
+    locale: AppLocale,
+    Json(req): Json<complete::Request>,
 ) -> Result<Json<CompleteResponse>, AppError> {
-    let request = flux_users_api::CompleteRequest {
-        request: Some(data.to_string()),
-    };
     let response = auth_service_client
         .clone()
-        .complete(request)
+        .complete(flux_users_api::CompleteRequest {
+            first_name: Some(req.first_name.into()),
+            last_name: Some(req.last_name.into()),
+            locale: Some(locale.to_string()),
+            credential: Some(req.credential.to_string()),
+        })
         .await?
         .into_inner();
 
     Ok(Json(response.into()))
+}
+
+mod complete {
+    use serde::Deserialize;
+    use serde_json::Value;
+
+    #[derive(Deserialize)]
+    pub struct Request {
+        pub first_name: String,
+        pub last_name: String,
+        pub credential: Value,
+    }
 }
 
 impl Into<CompleteResponse> for flux_users_api::CompleteResponse {

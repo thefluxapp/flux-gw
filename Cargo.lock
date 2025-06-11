@@ -543,7 +543,7 @@ dependencies = [
 [[package]]
 name = "flux-messages-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-messages.git#b79e58cd46d5488e600bfa7b223b58c68e82619f"
+source = "git+https://github.com/thefluxapp/flux-messages.git#4f8e5eaffd55045d3352a01d3fe67cde33d9f3e2"
 dependencies = [
  "prost",
  "prost-types",
@@ -565,7 +565,7 @@ dependencies = [
 [[package]]
 name = "flux-users-api"
 version = "0.1.0"
-source = "git+https://github.com/thefluxapp/flux-users.git#01d23dc02dcda3bff8b301155315bdd4b392816a"
+source = "git+https://github.com/thefluxapp/flux-users.git#c368fda667519349b9a62b52b50b9010c5041270"
 dependencies = [
  "prost",
  "tonic",
