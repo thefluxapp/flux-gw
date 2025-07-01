@@ -127,6 +127,7 @@ mod get_message {
         message_id: String,
         text: Option<String>,
         users: Vec<User>,
+        messages_count: i64,
     }
 
     #[derive(Serialize)]
@@ -236,7 +237,7 @@ mod get_message {
             Ok(Self {
                 stream_id: stream.stream_id().into(),
                 message_id: stream.message_id().into(),
-                text: stream.text,
+                text: stream.text.clone(),
                 users: stream
                     .user_ids
                     .iter()
@@ -256,6 +257,7 @@ mod get_message {
                         })
                     })
                     .collect::<Result<Vec<User>, Self::Error>>()?,
+                messages_count: stream.messages_count(),
             })
         }
     }
