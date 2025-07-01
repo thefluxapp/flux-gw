@@ -1,6 +1,5 @@
 use axum::{extract::State, routing::get, Json, Router};
 use flux_messages_api::GetUserStreamsRequest;
-use get_last_streams::Response;
 
 use crate::app::locale::AppLocale;
 
@@ -21,7 +20,7 @@ async fn get_last_streams(
         ..
     }): State<AppState>,
     locale: AppLocale,
-) -> Result<Json<Response>, AppError> {
+) -> Result<Json<get_last_streams::Response>, AppError> {
     let get_last_streams_response = streams_service_client
         .clone()
         .get_last_streams(flux_messages_api::GetLastStreamsRequest {
@@ -73,6 +72,7 @@ mod get_last_streams {
         message_id: String,
         text: Option<String>,
         users: Vec<User>,
+        messages_count: i64,
     }
 
     #[derive(Serialize)]
@@ -121,6 +121,7 @@ mod get_last_streams {
                                     users.get(user_id).try_into()
                                 })
                                 .collect::<Result<Vec<User>, Self::Error>>()?,
+                            messages_count: m.messages_count(),
                         })
                     })
                     .collect::<Result<Vec<Stream>, Self::Error>>()?,
@@ -153,7 +154,7 @@ async fn get_user_streams(
         ..
     }): State<AppState>,
     user: AppUser,
-) -> Result<Json<get_user_streams::Res>, AppError> {
+) -> Result<Json<get_user_streams::Response>, AppError> {
     let get_user_streams_response = streams_service_client
         .clone()
         .get_user_streams(GetUserStreamsRequest {
@@ -195,7 +196,7 @@ mod get_user_streams {
     use crate::app::error::AppError;
 
     #[derive(Serialize)]
-    pub struct Res {
+    pub struct Response {
         streams: Vec<Stream>,
     }
 
@@ -221,7 +222,7 @@ mod get_user_streams {
         TryFrom<(
             flux_messages_api::GetStreamsResponse,
             flux_users_api::GetUsersResponse,
-        )> for Res
+        )> for Response
     {
         type Error = AppError;
 
